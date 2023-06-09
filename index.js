@@ -30,6 +30,7 @@ async function run() {
 
     const classesCollection = client.db("summerCamp").collection("classes");
     const addClassCollection = client.db("summerCamp").collection("addClasses");
+    const instuctorsCollection = client.db("summerCamp").collection("insturctor");
 
     // class api
     app.get('/classes', async (req, res) => {
@@ -38,6 +39,16 @@ async function run() {
         sort: { 'available_seats': -1 }
       }
       const result = await classesCollection.find(query, options).toArray();
+      res.send(result);
+    })
+
+    // instuctor api
+    app.get('/insturctor', async (req, res) => {
+      const query = {}
+      const options = {
+        sort: { 'classNumber': -1 }
+      }
+      const result = await instuctorsCollection.find(query, options).toArray();
       res.send(result);
     })
 
