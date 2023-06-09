@@ -28,6 +28,7 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
+    const usersCollection = client.db("summerCamp").collection("users");
     const classesCollection = client.db("summerCamp").collection("classes");
     const addClassCollection = client.db("summerCamp").collection("addClasses");
     const instuctorsCollection = client.db("summerCamp").collection("insturctor");
