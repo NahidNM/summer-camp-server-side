@@ -33,6 +33,21 @@ async function run() {
     const addClassCollection = client.db("summerCamp").collection("addClasses");
     const instuctorsCollection = client.db("summerCamp").collection("insturctor");
 
+// user related apis
+app.post('/users', async(req, res)=>{
+  const user = req.body;
+// console.log(user);
+const quary = {email: user.email}
+const existingUser = await usersCollection.findOne(quary);
+// console.log(existingUser);
+if(existingUser){
+  return res.send({message: 'user already exists'})
+}
+
+  const result = await usersCollection.insertOne(user);
+  res.send(result)
+})
+
     // class api
     app.get('/classes', async (req, res) => {
       const query = {}
