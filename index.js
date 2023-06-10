@@ -53,23 +53,42 @@ async function run() {
 
     app.post('/jwt', (req, res)=>{
       const user = req.body;
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '5h' })
      res.send({token})
 
     })
 
-    // varifu Admin
+    //---------------- varifu Admin------------
+
     const verifyAdmin = async(req, res, next) =>{
       const email = req.decoded.email;
       const quary = {email: email};
       const user = await usersCollection.findOne(quary);
-      if(user?.role == 'admin'){
+      console.log(user);
+      if(user?.role !== 'admin'){
         return res.status(403).send({error: true, message: 'forbidden messeage'})
       }
       next();
     }
 
-// user related apis
+
+
+    // --------------------varify Instructor--------------------
+
+    const verifyInstructor = async(req, res, next) =>{
+      const email = req.decoded.email;
+      const quary = {email: email};
+      const user = await usersCollection.findOne(quary);
+      if(user?.role !== 'instructor'){
+        return res.status(403).send({error: true, message: 'forbidden messeage'})
+      }
+      next();
+    }
+
+
+
+//------------- user related apis--------------
+
 app.get('/users', verifyJWT, verifyAdmin, async(req, res)=>{
   const result = await usersCollection.find().toArray();
   res.send(result)
@@ -88,7 +107,10 @@ if(existingUser){
   res.send(result)
 })
 
-app.get('/users/admin/:email', verifyJWT,  async(req, res) =>{
+
+// --------------user Admin-------------
+
+app.get('/users/admin/:email', verifyJWT,   async(req, res) =>{
   const email = req.params.email;
 
   if(req.decoded.email !== email){
@@ -113,6 +135,35 @@ app.patch('/users/admin/:id', async(req, res)=>{
   res.send(result)
 })
 
+
+// --------------user Instructor-------------
+
+app.get('/users/instructor/:email', verifyJWT,   async(req, res) =>{
+  const email = req.params.email;
+  if(req.decoded.email !== email){
+    res.send({instructor: false})
+  }
+  const quary = {email: email};
+  const user = await usersCollection.findOne(quary);
+  const result = {instructor: user?.role === 'instructor'}
+  res.send(result);
+})
+
+app.patch('/users/instructor/:id', async(req, res)=>{
+  const id = req.params.id;
+  const filter = {_id: new ObjectId(id)};
+  const updateDoc = {
+    $set: {
+      role: 'instructor'
+    },
+  };
+
+  const result =await usersCollection.updateOne(filter, updateDoc);
+  res.send(result)
+})
+
+
+
     // class api
     app.get('/classes', async (req, res) => {
       const query = {}
@@ -123,7 +174,9 @@ app.patch('/users/admin/:id', async(req, res)=>{
       res.send(result);
     })
 
-    // instuctor api
+
+
+    //-------------- instuctor api---------
     app.get('/insturctor', async (req, res) => {
       const query = {}
       const options = {
@@ -132,6 +185,8 @@ app.patch('/users/admin/:id', async(req, res)=>{
       const result = await instuctorsCollection.find(query, options).toArray();
       res.send(result);
     })
+
+    
 
 // Add class colection
 app.get('/addClasses', verifyJWT, async(req, res) =>{
