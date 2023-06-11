@@ -21,7 +21,7 @@ const verifyJWT = (req, res, next) =>{
 
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, decoded) =>{
     if(error){
-      return res.status(401).send({error: type, message: 'unauthorized access'})
+      return res.status(401).send({error: true, message: 'unauthorized access'})
     }
 req.decoded= decoded;
 next();
@@ -179,6 +179,10 @@ app.patch('/users/instructor/:id', async(req, res)=>{
       }
       const result = await classesCollection.find(query, options).toArray();
       res.send(result);
+    })
+
+    app.post('/classes', async(req, res) =>{
+      const newClass =
     })
 
 
