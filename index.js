@@ -49,6 +49,9 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
+
+    // ------------MongoDb added database------------
+
     const usersCollection = client.db("summerCamp").collection("users");
     const classesCollection = client.db("summerCamp").collection("classes");
     const addClassCollection = client.db("summerCamp").collection("addClasses");
@@ -120,7 +123,7 @@ app.delete('/users/:id', async (req, res) => {
 })
 
 
-// --------------user Admin-------------
+// --------------user Admin prove-------------
 
 app.get('/users/admin/:email', verifyJWT,  async(req, res) =>{
   const email = req.params.email;
@@ -148,7 +151,7 @@ app.patch('/users/admin/:id', async(req, res)=>{
 })
 
 
-// --------------user Instructor-------------
+// --------------user Instructor prove -------------
 
 app.get('/users/instructor/:email', verifyJWT,   async(req, res) =>{
   const email = req.params.email;
@@ -177,6 +180,12 @@ app.patch('/users/instructor/:id', async(req, res)=>{
 
 
     // class api
+
+    app.get('/myaddclass',  async(req, res) =>{
+      const result = await classesCollection.find().toArray();
+      res.send(result)
+    })
+
     app.get('/classes', async (req, res) => {
       const query = {status: "Approved"}
       const options = {
@@ -205,7 +214,6 @@ const updateDoc = {
     status: 'Approved'
   }
 }
-
 const result = await classesCollection.updateOne(filter, updateDoc, option)
 res.send(result)
     })
@@ -220,7 +228,7 @@ res.send(result)
 
 
 
-    //-------------- instuctor api---------
+    //-------------- instuctor detail api---------
     app.get('/insturctor', async (req, res) => {
       const query = {}
       const options = {
@@ -266,7 +274,7 @@ app.delete('/addClasses/:id', async (req, res) => {
 })
 
 
-// -----------Creat Payment sectors and Single addClasse data get----------
+// -----------Create Payment sectors and Single addClasse data get----------
 
 app.get('/addClasses/:id', async (req, res) => {
   const id = req.params.id;
@@ -310,7 +318,7 @@ app.put('/classupdatedata/:id', async (req, res) =>{
   const updateDoc = {
     $set: {
       available_seats: update.newseat,
-      // enroll: update.newEnroll,
+      enroll: update.newEnroll,
     }
   }
 //  console.log(updateDoc);
@@ -323,10 +331,22 @@ app.put('/classupdatedata/:id', async (req, res) =>{
 // ----------------------Enroll database-------------
 
 app.get('/enrollclass', async (req, res) => {
-  const result = await PaymentCollection.find().toArray();
-  res.send(result);
+const result = await PaymentCollection.find().toArray();
+  res.send (result);
 })
 
+// Admin Home page
+app.get('/adminhome', async (req, res) => {
+  // count data
+const users = await usersCollection.estimatedDocumentCount();
+const classes = await classesCollection.estimatedDocumentCount(); 
+const enroll = await PaymentCollection.estimatedDocumentCount();
+const payments = await PaymentCollection.find().toArray();
+const price = payments.reduce( ( sum, payment) => sum + payment.price, 0)
+  res.send ({users, classes, enroll, price});
+})
+
+// payment post and data update
 app.post('/payment',  async(req, res)=>{
   const payment = req.body;
   // console.log(payment);
@@ -335,8 +355,15 @@ app.post('/payment',  async(req, res)=>{
   const id=payment.classId;
   const quary = {_id: {$in: [new ObjectId(id)]}};
   const deleteResult = await addClassCollection.deleteOne(quary);
-  console.log(deleteResult);
+  // console.log(deleteResult);
   res.send({insertResult, deleteResult});
+})
+
+app.delete('/payment/:id', async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+  const result = await PaymentCollection.deleteOne(query);
+  res.send(result);
 })
 
 
