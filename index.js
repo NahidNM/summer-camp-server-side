@@ -178,13 +178,38 @@ app.patch('/users/instructor/:id', async(req, res)=>{
 
     // class api
     app.get('/classes', async (req, res) => {
-      const query = {}
+      const query = {status: "Approved"}
       const options = {
         sort: { 'available_seats': -1 }
       }
       const result = await classesCollection.find(query, options).toArray();
       res.send(result);
     })
+
+
+    app.get('/classesmanage', async (req, res) => {
+      const query = {status: "Pending"}
+      // const options = {
+      //   sort: { 'available_seats': -1 }
+      // }
+      const result = await classesCollection.find(query).toArray();
+      res.send(result);
+    })
+
+ app.put('/adminapprove/:id', async(req, res) =>{
+      const id = req.params.id;
+const filter = {_id: new ObjectId(id)}
+const option = {upsert: true};
+const updateDoc = {
+  $set: {
+    status: 'Approved'
+  }
+}
+
+const result = await classesCollection.updateOne(filter, updateDoc, option)
+res.send(result)
+    })
+
 
     app.post('/classes',  async(req, res) =>{
       const newClass =req.body;
@@ -281,14 +306,16 @@ app.put('/classupdatedata/:id', async (req, res) =>{
   const filter = {_id: new ObjectId(id)};
   const option = { upsert: true };
   const update = req.body;
+  console.log(update);
   const updateDoc = {
     $set: {
       available_seats: update.newseat,
-      enroll: update.newEnroll,
+      // enroll: update.newEnroll,
     }
   }
-
+//  console.log(updateDoc);
   const result = await classesCollection.updateOne(filter, updateDoc, option);
+ 
   res.send(result);
 })
 
@@ -308,6 +335,7 @@ app.post('/payment',  async(req, res)=>{
   const id=payment.classId;
   const quary = {_id: {$in: [new ObjectId(id)]}};
   const deleteResult = await addClassCollection.deleteOne(quary);
+  console.log(deleteResult);
   res.send({insertResult, deleteResult});
 })
 
