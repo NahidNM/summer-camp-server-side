@@ -97,7 +97,7 @@ async function run() {
 
 //------------- user related apis--------------
 
-app.get('/users', verifyJWT, verifyAdmin, async(req, res)=>{
+app.get('/users', verifyJWT, verifyAdmin,  async(req, res)=>{
   const result = await usersCollection.find().toArray();
   res.send(result)
 })
@@ -181,7 +181,7 @@ app.patch('/users/instructor/:id', async(req, res)=>{
 
     // class api
 
-    app.get('/myaddclass',  async(req, res) =>{
+    app.get('/myaddclass', verifyJWT, async(req, res) =>{
       const result = await classesCollection.find().toArray();
       res.send(result)
     })
@@ -196,7 +196,7 @@ app.patch('/users/instructor/:id', async(req, res)=>{
     })
 
 
-    app.get('/classesmanage', async (req, res) => {
+ app.get('/classesmanage', verifyJWT, verifyAdmin, async (req, res) => {
       const query = {status: "Pending"}
       // const options = {
       //   sort: { 'available_seats': -1 }
@@ -218,14 +218,22 @@ const result = await classesCollection.updateOne(filter, updateDoc, option)
 res.send(result)
     })
 
-
-    app.post('/classes',  async(req, res) =>{
+// class approve post
+    app.post('/classes', verifyJWT,  async(req, res) =>{
       const newClass =req.body;
       const result = await classesCollection.insertOne(newClass);
       res.send(result)
       
     })
 
+   // instructor add to class delete 
+   app.delete('/myaddclassdelete/:id', async (req, res) => {
+    const id = req.params.id;
+    console.log(id);
+    const query = { _id: new ObjectId(id) };
+    const result = await classesCollection.deleteOne(query);
+    res.send(result);
+  })
 
 
     //-------------- instuctor detail api---------
@@ -347,7 +355,7 @@ const price = payments.reduce( ( sum, payment) => sum + payment.price, 0)
 })
 
 // payment post and data update
-app.post('/payment',  async(req, res)=>{
+app.post('/payment', verifyJWT,  async(req, res)=>{
   const payment = req.body;
   // console.log(payment);
   const insertResult =await PaymentCollection.insertOne(payment);
